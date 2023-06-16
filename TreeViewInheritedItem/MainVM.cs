@@ -55,8 +55,8 @@ namespace TreeViewInheritedItem
 
             _clear = ReactiveCommand.Create(() =>
             {
-                Family.Clear();
-                Family.Add(new Person("Tree cleared, look at memory usage"));
+                _familySrc.Clear();
+                _familySrc.Add(new Person("Tree cleared, look at memory usage"));
             });
 
             _familySrc.Connect().Bind(_family).Subscribe();
