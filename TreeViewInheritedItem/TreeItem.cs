@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using DynamicData;
+using DynamicData.Binding;
 using ReactiveUI;
 
 namespace TreeViewInheritedItem
@@ -27,8 +29,7 @@ namespace TreeViewInheritedItem
 
         protected TreeItem(IEnumerable<TreeItem> children = null)
         {
-
-            Children = new ReactiveList<TreeItem>();
+            _childrenSrc.Connect().Bind(_children).Subscribe();
             if (children == null) return;
             foreach (var child in children)
             {
@@ -37,12 +38,15 @@ namespace TreeViewInheritedItem
         }
 
         public abstract object ViewModel { get; }
-        public ReactiveList<TreeItem> Children { get; }
+
+        private SourceList<TreeItem> _childrenSrc = new SourceList<TreeItem>();
+        private readonly ObservableCollectionExtended<TreeItem> _children = new ObservableCollectionExtended<TreeItem>();
+        public ObservableCollectionExtended<TreeItem> Children => this._children;
 
         public void AddChild(TreeItem child)
         {
             child._parent = this;
-            Children.Add(child);
+            _childrenSrc.Add(child);
         }
 
         public void ExpandPath()

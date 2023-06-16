@@ -4,29 +4,43 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TreeViewInheritedItem"
-        xmlns:reactiveUi="clr-namespace:ReactiveUI;assembly=ReactiveUI"
+        xmlns:reactiveUi="http://reactiveui.net"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <Button Name="AddPerson" Width="80">Add Person</Button>
-            <TextBox Name="NewName" Width="200"></TextBox>
-            <Button Name="Collapse" Width="80">Collapse</Button>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="1" Grid.Column="1">
+            <StackPanel Orientation="Horizontal">
+                <Button Name="AddPerson" Width="80">Add Person</Button>
+                <TextBox Name="NewName" Width="200"></TextBox>
+                <Button Name="Collapse" Width="80">Collapse</Button>
+                <Button Name="Clear" Width="80">Clear</Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Name="AddPet" Width="80">Add Pet</Button>
+                <TextBox Name="PetName" Width="200"></TextBox>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <Button Name="AddPet" Width="80">Add Pet </Button>
-            <TextBox Name="PetName" Width="200"></TextBox>
-        </StackPanel>
-        <TreeView Name="FamilyTree" >
-            <TreeView.Resources>
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                </Style>
-                <HierarchicalDataTemplate DataType="{x:Type local:TreeItem}" ItemsSource="{Binding Children}">
-                    <reactiveUi:ViewModelViewHost ViewModel="{Binding ViewModel}"/>
-                </HierarchicalDataTemplate>
-            </TreeView.Resources>
+        <TreeView Name="FamilyTree" Grid.Row="2" Grid.Column="1">
+                <TreeView.Resources>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                    </Style>
+                    <HierarchicalDataTemplate DataType="{x:Type local:TreeItem}" ItemsSource="{Binding Children}">
+                        <reactiveUi:ViewModelViewHost ViewModel="{Binding ViewModel}"/>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
         </TreeView>
-    </StackPanel>
+    </Grid>
 </Window>
