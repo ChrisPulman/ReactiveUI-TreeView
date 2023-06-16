@@ -17,7 +17,7 @@ namespace TreeViewInheritedItem
         {
             var bobbyJoe = new Person("Bobby Joe", new[] { new Pet("Fluffy") });
             var bob = new Person("Bob", new[] { bobbyJoe });
-            var joe = new Person("Joe (expand me, opens 1000 nodes)");
+            var joe = new Person("Joe (expands 1000 nodes, look at memory usage)");
 
             // These 1000 nodes don't show up in memory usage until their parent node is expanded.
             // Shouldn't a thousand very simple TreeView node VM's use a bit less memory? Now it's an about 120mb increase on my machine.
