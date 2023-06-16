@@ -1,5 +1,5 @@
 # ReactiveUI-TreeView
-I took the liberty of using a fork of this simple ReactiveUI TreeView "showcase", to show some memory and performance issues I've been running into using WPF TreeView and ReactiveUI. These kinds of problems with the TreeView have not been apparent to me before switching to RxUI. To replicate the problems, try following these steps:
+I took the liberty of using a fork of condron's simple ReactiveUI TreeView "showcase", to show some memory and performance issues I've been running into using WPF TreeView and ReactiveUI. These kinds of problems with the TreeView have not been apparent to me before switching to RxUI. To replicate the problems, try following these steps:
 
 1. The "Joe" node has a 1000 child nodes. Try expanding it and look at memory usage. On my machine there is a ~120mb increase, and it takes ~5 seconds to perform the expansion.
 2. Try collapsing the node, and look at memory use. On my machine, there is no memory freed up. I would expect (or at least aim for) that the memory use would get back to what it was when I started the app.
