@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive;
+using System.Threading.Tasks;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -27,6 +28,7 @@ namespace TreeViewInheritedItem
             {
                 joe.AddChild(new Person("Little Joe" + i));
             }
+
             _familySrc.Add(bob);
             _familySrc.Add(joe);
 
@@ -55,7 +57,7 @@ namespace TreeViewInheritedItem
 
             _clear = ReactiveCommand.Create(() =>
             {
-                _familySrc.Clear();
+                _familySrc.ClearDispose();
                 _familySrc.Add(new Person("Tree cleared, look at memory usage"));
             });
 
@@ -78,6 +80,7 @@ namespace TreeViewInheritedItem
             get { return _newName; }
             set { this.RaiseAndSetIfChanged(ref _newName, value); }
         }
+
         string _petName;
         public string PetName
         {
