@@ -1,13 +1,17 @@
-﻿namespace TreeViewInheritedItem
+﻿using ReactiveUI;
+
+namespace TreeViewInheritedItem
 {
     public class Pet : TreeItem
     {
-        public string Name { get; }
+        private string _name;
 
-        public Pet(string name)
+        public Pet(string name) => Name = name;
+
+        public string Name
         {
-            Name = name;
+            get { return _name; }
+            set { this.RaiseAndSetIfChanged(ref _name, value); }
         }
-        public override object ViewModel => this;
     }
 }

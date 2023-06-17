@@ -10,7 +10,5 @@
     d:DesignWidth="300"
     x:TypeArguments="local:Person"
     mc:Ignorable="d">
-    <StackPanel>
-        <TextBlock Name="PersonName" />
-    </StackPanel>
+    <TextBlock Name="PersonName" />
 </reactiveUi:ReactiveUserControl>

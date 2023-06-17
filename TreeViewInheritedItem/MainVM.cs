@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive;
-using System.Threading.Tasks;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -13,6 +13,8 @@ namespace TreeViewInheritedItem
         private readonly ReactiveCommand<Unit, Unit> _addPet;
         private readonly ReactiveCommand<Unit, Unit> _collapse;
         private readonly ReactiveCommand<Unit, Unit> _clear;
+        private readonly SourceList<TreeItem> _familySrc = new SourceList<TreeItem>();
+        private readonly ObservableCollectionExtended<TreeItem> _family = new ObservableCollectionExtended<TreeItem>();
 
         public MainVM()
         {
@@ -24,10 +26,8 @@ namespace TreeViewInheritedItem
             // Shouldn't a thousand very simple TreeView node VM's use a bit less memory? Now it's an about 120mb increase on my machine.
             // Also expanding the node is a very slow operation.
             // Collapsing the parent node does nothing for memory usage. 
-            for (int i = 0; i < 1000; i++)
-            {
-                joe.AddChild(new Person("Little Joe" + i));
-            }
+            var children = Enumerable.Range(0, 1000).Select(x => new Person("Little Joe" + x));
+            joe.AddChildRange(children);
 
             _familySrc.Add(bob);
             _familySrc.Add(joe);
@@ -57,21 +57,36 @@ namespace TreeViewInheritedItem
 
             _clear = ReactiveCommand.Create(() =>
             {
+                // Clearing the tree, and adding a node does nothing for memory usage. Why?
+                // When you call Clear() all that happens is the SourceList is cleared, and the ObservableCollection is updated.
+                // The cleared items are still in memory, and the ObservableCollection is still holding references to them.
+                // In order to clear the memory, you need to call Dispose() on the items followed by GC.Collect().
+                // Therefore I added IDisposable to TreeItem and a ClearDispose() extension method to SourceList.
+                // This method calls Dispose() on all items in the SourceList, and then clears the list.
+                // GC.Collect() is called, to expedite the collection of the disposed items.
+                // If you don't call GC.Collect(), the disposed items will be collected eventually, but it takes a while.
                 _familySrc.ClearDispose();
-                _familySrc.Add(new Person("Tree cleared, look at memory usage"));
+                _familySrc.Add(new Person("Tree cleared, look at memory usage after 2 seconds"));
             });
 
             _familySrc.Connect().Bind(_family).Subscribe();
         }
 
-        private SourceList<TreeItem> _familySrc = new SourceList<TreeItem>();
-        private readonly ObservableCollectionExtended<TreeItem> _family = new ObservableCollectionExtended<TreeItem>();
         public ObservableCollectionExtended<TreeItem> Family => this._family;
         public ReactiveCommand<Unit, Unit> AddPerson => this._addPerson;
         public ReactiveCommand<Unit, Unit> AddPet => this._addPet;
         public ReactiveCommand<Unit, Unit> Collapse => this._collapse;
 
-        // Clearing the tree, and adding a node does nothing for memory usage. Why?
+        /// <summary>
+        /// Clearing the tree, and adding a node does nothing for memory usage. Why?
+        /// When you call Clear() all that happens is the SourceList is cleared, and the ObservableCollection is updated.
+        /// The cleared items are still in memory, and the ObservableCollection is still holding references to them.
+        /// In order to clear the memory, you need to call Dispose() on the items followed by GC.Collect().
+        /// Therefore I added a ClearDispose() extension method to SourceList.
+        /// This method calls Dispose() on all items in the SourceList, and then clears the list.
+        /// GC.Collect() is called, to expedite the collection of the memory for the purposes of this demonstration.
+        /// However, in a real application you should not call GC.Collect() as it is very expensive, it will be done automatically.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> Clear => this._clear;
 
         string _newName;

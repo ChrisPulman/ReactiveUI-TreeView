@@ -1,15 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using ReactiveUI;
+using System.Collections.Generic;
 
 namespace TreeViewInheritedItem
 {
     public class Person : TreeItem
     {
-        public string Name { get; set; }
+        private string _name;
+
         public Person(string name, IEnumerable<TreeItem> children = null)
-            : base(children)
+            : base(children) => Name = name;
+
+        public string Name
         {
-            Name = name;
+            get { return _name; }
+            set { this.RaiseAndSetIfChanged(ref _name, value); }
         }
-        public override object ViewModel => this;
     }
 }

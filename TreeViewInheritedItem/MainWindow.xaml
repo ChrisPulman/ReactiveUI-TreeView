@@ -45,7 +45,7 @@
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                 </Style>
                 <HierarchicalDataTemplate DataType="{x:Type local:TreeItem}" ItemsSource="{Binding Children}">
-                    <reactiveUi:ViewModelViewHost ViewModel="{Binding ViewModel}" />
+                    <reactiveUi:ViewModelViewHost ViewModel="{Binding}" />
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>
