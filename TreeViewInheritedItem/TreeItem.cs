@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Disposables;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI;
@@ -7,9 +8,11 @@ using ReactiveUI;
 namespace TreeViewInheritedItem
 {
 
-    public abstract class TreeItem : ReactiveObject
+    public abstract class TreeItem : ReactiveObject, IDisposable
     {
         private readonly Type _viewModelType;
+        private bool disposedValue;
+        private TreeItem _parent;
 
         bool _isExpanded;
         public bool IsExpanded
@@ -19,17 +22,17 @@ namespace TreeViewInheritedItem
         }
 
         bool _isSelected;
+        private IDisposable _disposable;
+
         public bool IsSelected
         {
             get { return _isSelected; }
             set { this.RaiseAndSetIfChanged(ref _isSelected, value); }
         }
 
-        private TreeItem _parent;
-
         protected TreeItem(IEnumerable<TreeItem> children = null)
         {
-            _childrenSrc.Connect().Bind(_children).Subscribe();
+            _disposable = _childrenSrc.Connect().Bind(_children).Subscribe();
             if (children == null) return;
             foreach (var child in children)
             {
@@ -39,7 +42,7 @@ namespace TreeViewInheritedItem
 
         public abstract object ViewModel { get; }
 
-        private SourceList<TreeItem> _childrenSrc = new SourceList<TreeItem>();
+        private readonly SourceList<TreeItem> _childrenSrc = new SourceList<TreeItem>();
         private readonly ObservableCollectionExtended<TreeItem> _children = new ObservableCollectionExtended<TreeItem>();
         public ObservableCollectionExtended<TreeItem> Children => this._children;
 
@@ -58,6 +61,32 @@ namespace TreeViewInheritedItem
         {
             IsExpanded = false;
             _parent?.CollapsePath();
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (var child in Children)
+                    {
+                        child.Dispose();
+                    }
+
+                    _disposable.Dispose();
+                    _childrenSrc.Dispose();
+                }
+
+                disposedValue = true;
+            }
         }
     }
 }
