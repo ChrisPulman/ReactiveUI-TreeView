@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Reactive.Disposables;
 using ReactiveUI;
 
 namespace TreeViewInheritedItem
@@ -7,26 +6,15 @@ namespace TreeViewInheritedItem
     /// <summary>
     /// Interaction logic for PersonView.xaml
     /// </summary>
-    public partial class PersonView : UserControl, IViewFor<Person>
+    public partial class PersonView
     {
         public PersonView()
         {
             InitializeComponent();
-            this.OneWayBind(ViewModel, vm => vm.Name, v => v.PersonName.Text);
-        }
-        object IViewFor.ViewModel
-        {
-            get { return ViewModel; }
-            set { ViewModel = (Person)value; }
-        }
-
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            "ViewModel", typeof(Person), typeof(PersonView), new PropertyMetadata(default(Person)));
-
-        public Person ViewModel
-        {
-            get { return (Person)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            this.WhenActivated(d =>
+            {
+                this.OneWayBind(ViewModel, vm => vm.Name, v => v.PersonName.Text).DisposeWith(d);
+            });
         }
     }
 }

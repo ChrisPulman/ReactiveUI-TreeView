@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,26 +20,15 @@ namespace TreeViewInheritedItem
     /// <summary>
     /// Interaction logic for PetView.xaml
     /// </summary>
-    public partial class PetView : UserControl,IViewFor<Pet>
+    public partial class PetView
     {
         public PetView()
         {
             InitializeComponent();
-            this.OneWayBind(ViewModel, vm => vm.Name, v => v.PetName.Text);
-        }
-        object IViewFor.ViewModel
-        {
-            get { return ViewModel; }
-            set { ViewModel = (Pet)value; }
-        }
-
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            "ViewModel", typeof(Pet), typeof(PetView), new PropertyMetadata(default(Pet)));
-
-        public Pet ViewModel
-        {
-            get { return (Pet)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            this.WhenActivated(d =>
+            {
+                this.OneWayBind(ViewModel, vm => vm.Name, v => v.PetName.Text).DisposeWith(d);
+            });
         }
     }
 }
