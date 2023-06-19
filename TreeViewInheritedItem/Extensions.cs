@@ -37,9 +37,9 @@ namespace TreeViewInheritedItem
         /// <param name="activated">The activated observable.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns></returns>
-        public static IDisposable ClearIfNotActivated(this SourceList<TreeItem> sourceList, IObservable<bool> activated, IScheduler scheduler = null)
+        public static IDisposable ClearIfNotActivated(this ISourceList<ITreeItem> sourceList, IObservable<bool> activated, IScheduler scheduler = null)
         {
-            List<TreeItem> listOfItems = null;
+            List<ITreeItem> listOfItems = null;
             return activated.DistinctUntilChanged().ObserveOn(scheduler ?? RxApp.MainThreadScheduler).Subscribe(x =>
             {
                 if (sourceList.Count == 0)
@@ -53,15 +53,28 @@ namespace TreeViewInheritedItem
                     {
                         if (listOfItems != null)
                         {
+                            // Dispose of the dummy item
+                            foreach (var item in innerList)
+                            {
+                                ClearAndDisposeChildren(item);
+                            }
+
                             innerList.Clear();
+
+                            // Reload the list of items that were cleared when the treeview was collapsed
                             innerList.AddRange(listOfItems);
                             listOfItems = null;
                         }
                     }
                     else
                     {
-                        listOfItems = new List<TreeItem>(innerList);
+                        // Store the list of items to be cleared so that they can be reloaded when the treeview is expanded
+                        listOfItems = new List<ITreeItem>(innerList);
+
+                        // Only Clear the list, do not dispose of the items
                         innerList.Clear();
+
+                        // Add a dummy item to the list to ensure that the treeview is not empty
                         innerList.Add(new Person(""));
 
                         // Only for testing purposes to demonstrate that the memory is released
@@ -71,7 +84,11 @@ namespace TreeViewInheritedItem
             });
         }
 
-        public static void ClearDispose(this SourceList<TreeItem> sourceList)
+        /// <summary>
+        /// This method is used to clear and dispose of all items in a SourceList.
+        /// </summary>
+        /// <param name="sourceList">The source list.</param>
+        public static void ClearDispose(this ISourceList<ITreeItem> sourceList)
         {
             sourceList.Edit(innerList =>
             {
@@ -81,37 +98,42 @@ namespace TreeViewInheritedItem
                 }
 
                 innerList.Clear();
-
-                void ClearAndDisposeChildren(TreeItem item)
-                {
-                    if (item.Children.Any())
-                    {
-                        foreach (var child in item.Children)
-                        {
-                            ClearAndDisposeChildren(child);
-                            child.Dispose();
-                        }
-
-                        item.Children.Clear();
-                    }
-
-                    item.Dispose();
-                }
             });
 
             // Only for testing purposes to demonstrate that the memory is released
             GC_Collect();
         }
 
+        private static void ClearAndDisposeChildren(ITreeItem item)
+        {
+            if (item.HasChildren)
+            {
+                foreach (var child in item.Children)
+                {
+                    ClearAndDisposeChildren(child);
+                    child.Dispose();
+                }
+
+                item.Children.Clear();
+            }
+
+            item.Dispose();
+        }
+
         public static void GC_Collect(int delay = 1000)
         {
             Task.Run(() =>
             {
+                // GC.Collect() is blocking, so we need to run it on a separate thread
+                // GC.Collect() is not guaranteed to collect all garbage, we are calling it with no parameters to collect all generations
+                // GC.Collect() has to be called several times to collect all garbage, there is a factor of around 10x between each call
+                // before it collects all garbage, so we call it once with no parameters to collect all generations, then we call it again for Generation two.
+                // Generation two is the oldest generation and is the most likely to contain large garbage that is not collected.
+                // We then wait for all finalizers to complete before continuing.
                 GC.Collect();
                 Task.Delay(delay).Wait();
                 GC.Collect(2);
                 GC.WaitForPendingFinalizers();
-                Task.Delay(delay).Wait();
             });
         }
     }

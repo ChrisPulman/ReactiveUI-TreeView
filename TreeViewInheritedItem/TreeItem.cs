@@ -8,66 +8,130 @@ using ReactiveUI;
 
 namespace TreeViewInheritedItem
 {
-    public abstract class TreeItem : ReactiveObject, IDisposable
+    /// <summary>
+    /// A base class for tree items.
+    /// </summary>
+    /// <seealso cref="ReactiveObject" />
+    /// <seealso cref="ITreeItem" />
+    public abstract class TreeItem : ReactiveObject, ITreeItem
     {
-        private readonly SourceList<TreeItem> _childrenSrc = new SourceList<TreeItem>();
-        private readonly ObservableCollectionExtended<TreeItem> _children = new ObservableCollectionExtended<TreeItem>();
-        private readonly CompositeDisposable _disposables = new CompositeDisposable();
-        private bool disposedValue;
-        private TreeItem _parent;
+        private readonly SourceList<ITreeItem> _childrenSrc = new();
+        private readonly ObservableCollectionExtended<ITreeItem> _children = new();
+        private readonly CompositeDisposable _disposables = new();
+        private ITreeItem _parent;
+        bool _isExpanded;
+        bool _isSelected;
 
-        protected TreeItem(IEnumerable<TreeItem> children = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TreeItem"/> class.
+        /// </summary>
+        /// <param name="children">The children.</param>
+        protected TreeItem(IEnumerable<ITreeItem> children = null)
         {
             _childrenSrc.Connect().Bind(_children).Subscribe().DisposeWith(_disposables);
             _childrenSrc.ClearIfNotActivated(this.WhenAnyValue(x => x.IsExpanded)).DisposeWith(_disposables);
             if (children == null) return;
-            foreach (var child in children)
-            {
-                AddChild(child);
-            }
+            AddRange(children);
         }
 
-        bool _isExpanded;
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is expanded.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is expanded; otherwise, <c>false</c>.
+        /// </value>
         public bool IsExpanded
         {
             get { return _isExpanded; }
             set { this.RaiseAndSetIfChanged(ref _isExpanded, value); }
         }
 
-        bool _isSelected;
-
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is selected.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is selected; otherwise, <c>false</c>.
+        /// </value>
         public bool IsSelected
         {
             get { return _isSelected; }
             set { this.RaiseAndSetIfChanged(ref _isSelected, value); }
         }
 
-        public ObservableCollectionExtended<TreeItem> Children => this._children;
+        /// <summary>
+        /// Gets a value indicating whether this instance has children.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance has children; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasChildren => _children.Count > 0;
 
-        public void AddChild(TreeItem child)
+        /// <summary>
+        /// Gets the children.
+        /// </summary>
+        /// <value>
+        /// The children.
+        /// </value>
+        public ObservableCollectionExtended<ITreeItem> Children => _children;
+
+        /// <summary>
+        /// Gets or sets the parent.
+        /// </summary>
+        /// <value>
+        /// The parent.
+        /// </value>
+        public ITreeItem Parent
         {
-            child._parent = this;
+            get { return _parent; }
+            set { this.RaiseAndSetIfChanged(ref _parent, value); }
+        }
+
+        /// <summary>
+        /// Gets a value that indicates whether the object is disposed.
+        /// </summary>
+        public bool IsDisposed => _disposables.IsDisposed;
+
+        /// <summary>
+        /// Adds the specified child.
+        /// </summary>
+        /// <param name="child">The child.</param>
+        public void Add(ITreeItem child)
+        {
+            child.DisposeWith(_disposables);
+            child.Parent = this;
             _childrenSrc.Add(child);
         }
 
-        public void AddChildRange(IEnumerable<TreeItem> children)
+        /// <summary>
+        /// Adds the range of children.
+        /// </summary>
+        /// <param name="children">The children.</param>
+        public void AddRange(IEnumerable<ITreeItem> children)
         {
             _childrenSrc.Edit(innerList =>
             {
-                foreach (var item in children)
+                foreach (var child in children)
                 {
-                    item._parent = this;
+                    child.DisposeWith(_disposables);
+                    child.Parent = this;
                 }
 
                 innerList.AddRange(children);
             });
         }
 
+        /// <summary>
+        /// Expands the path until parent is null.
+        /// </summary>
         public void ExpandPath()
         {
             IsExpanded = true;
             _parent?.ExpandPath();
         }
+
+        /// <summary>
+        /// Collapses the path until parent is null.
+        /// </summary>
         public void CollapsePath()
         {
             IsExpanded = false;
@@ -84,22 +148,16 @@ namespace TreeViewInheritedItem
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!IsDisposed && disposing)
             {
-                if (disposing)
-                {
-                    _childrenSrc.ClearDispose();
-                    foreach (var child in Children)
-                    {
-                        child.Dispose();
-                    }
-
-                    _disposables.Dispose();
-                }
-
-                disposedValue = true;
+                _childrenSrc.ClearDispose();
+                _disposables.Dispose();
             }
         }
     }

@@ -13,8 +13,8 @@ namespace TreeViewInheritedItem
         private readonly ReactiveCommand<Unit, Unit> _addPet;
         private readonly ReactiveCommand<Unit, Unit> _collapse;
         private readonly ReactiveCommand<Unit, Unit> _clear;
-        private readonly SourceList<TreeItem> _familySrc = new SourceList<TreeItem>();
-        private readonly ObservableCollectionExtended<TreeItem> _family = new ObservableCollectionExtended<TreeItem>();
+        private readonly SourceList<ITreeItem> _familySrc = new();
+        private readonly ObservableCollectionExtended<ITreeItem> _family = new();
 
         public MainVM()
         {
@@ -27,7 +27,7 @@ namespace TreeViewInheritedItem
             // Also expanding the node is a very slow operation.
             // Collapsing the parent node does nothing for memory usage. 
             var children = Enumerable.Range(0, 1000).Select(x => new Person("Little Joe" + x));
-            joe.AddChildRange(children);
+            joe.AddRange(children);
 
             _familySrc.Add(bob);
             _familySrc.Add(joe);
@@ -36,7 +36,7 @@ namespace TreeViewInheritedItem
             {
                 if (SelectedItem == null) return;
                 var p = new Person(NewName);
-                SelectedItem.AddChild(p);
+                SelectedItem.Add(p);
                 p.IsSelected = true;
                 p.ExpandPath();
             });
@@ -45,7 +45,7 @@ namespace TreeViewInheritedItem
             {
                 if (SelectedItem == null) return;
                 var p = new Pet(PetName);
-                SelectedItem.AddChild(p);
+                SelectedItem.Add(p);
                 p.IsSelected = true;
                 p.ExpandPath();
             });
@@ -72,10 +72,10 @@ namespace TreeViewInheritedItem
             _familySrc.Connect().Bind(_family).Subscribe();
         }
 
-        public ObservableCollectionExtended<TreeItem> Family => this._family;
-        public ReactiveCommand<Unit, Unit> AddPerson => this._addPerson;
-        public ReactiveCommand<Unit, Unit> AddPet => this._addPet;
-        public ReactiveCommand<Unit, Unit> Collapse => this._collapse;
+        public ObservableCollectionExtended<ITreeItem> Family => _family;
+        public ReactiveCommand<Unit, Unit> AddPerson => _addPerson;
+        public ReactiveCommand<Unit, Unit> AddPet => _addPet;
+        public ReactiveCommand<Unit, Unit> Collapse => _collapse;
 
         /// <summary>
         /// Clearing the tree, and adding a node does nothing for memory usage. Why?
@@ -87,7 +87,7 @@ namespace TreeViewInheritedItem
         /// GC.Collect() is called, to expedite the collection of the memory for the purposes of this demonstration.
         /// However, in a real application you should not call GC.Collect() as it is very expensive, it will be done automatically.
         /// </summary>
-        public ReactiveCommand<Unit, Unit> Clear => this._clear;
+        public ReactiveCommand<Unit, Unit> Clear => _clear;
 
         string _newName;
         public string NewName
@@ -103,8 +103,8 @@ namespace TreeViewInheritedItem
             set { this.RaiseAndSetIfChanged(ref _petName, value); }
         }
 
-        TreeItem _selectedItem;
-        public TreeItem SelectedItem
+        ITreeItem _selectedItem;
+        public ITreeItem SelectedItem
         {
             get { return _selectedItem; }
             set { this.RaiseAndSetIfChanged(ref _selectedItem, value); }

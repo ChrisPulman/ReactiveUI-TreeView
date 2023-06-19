@@ -7,7 +7,7 @@ namespace TreeViewInheritedItem
     {
         private string _name;
 
-        public Person(string name, IEnumerable<TreeItem> children = null)
+        public Person(string name, IEnumerable<ITreeItem> children = null)
             : base(children) => Name = name;
 
         public string Name

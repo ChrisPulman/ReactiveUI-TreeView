@@ -15,7 +15,7 @@ namespace TreeViewInheritedItem
             {
                 this.OneWayBind(ViewModel, vm => vm.Name, v => v.PersonName.Text).DisposeWith(d);
                 Disposable
-                .Create(() => this.WhenDeActivated())
+                .Create(() => WhenDeActivated())
                 .DisposeWith(d);
             });
         }
